@@ -1,88 +1,110 @@
-int rForward = 16; 
-int rBackward = 17; 
-int lForward = 18; 
-int lBackward = 5; // ass
+int rightForward = 16; 
+int rightBackward = 17; 
+int leftForward = 18; 
+int leftBackward = 5;
 
 int enableA = 22;
 int enableB = 23; 
 
-void setup() {
-  // put your setup code here, to run once:
-  pinMode(rForward, OUTPUT); 
-  pinMode(rBackward, OUTPUT);
-  pinMode(lForward, OUTPUT);
-  pinMode(lBackward, OUTPUT); 
+// *************************
 
+void setup() {
   pinMode(enableA, OUTPUT);
   pinMode(enableB, OUTPUT);
+  
+  pinMode(rightForward, OUTPUT); 
+  pinMode(rightBackward, OUTPUT);
+  pinMode(leftForward, OUTPUT);
+  pinMode(leftBackward, OUTPUT); 
 
   digitalWrite(enableA, HIGH);
   digitalWrite(enableB, HIGH); 
-}
+} // END setup
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  moveForward();
+  sampleMove(); 
+  delay(500); 
+} // END loop
+
+// *************************
+
+// Sample Movement
+//
+void sampleMove(){
+  forward();
   delay(1000);
-  moveBackward();
+  backward();
   delay(1000);
-  turnRight(90); 
+  right(); 
   delay(1000);
-  moveForward(); 
-  stopAll();
+  forward(); 
+  stop();
   delay(1000);
-  turnLeft(90);
-  moveBackward();
-}
+  left();
+  backward();
+} // END sampleMove
 
-void moveForward() {
-  digitalWrite(rForward, HIGH);
-  digitalWrite(rBackward, LOW);
 
-  digitalWrite(lForward, HIGH);
-  digitalWrite(lBackward, LOW);
-}
+// Moves the bot forward
+//
+void forward() {
+  digitalWrite(leftBackward, LOW);
+  digitalWrite(rightBackward, LOW);
+  
+  digitalWrite(rightForward, HIGH);
+  digitalWrite(leftForward, HIGH);
+} // END forward
 
-void moveBackward() {
-  digitalWrite(rForward, LOW);
-  digitalWrite(rBackward, HIGH);
 
-  digitalWrite(lForward, LOW);
-  digitalWrite(lBackward, HIGH);
-}
+// Moves the bot backward 
+//
+void backward() {
+  digitalWrite(rightForward, LOW);
+  digitalWrite(leftForward, LOW);
+  
+  digitalWrite(rightBackward, HIGH);
+  digitalWrite(leftBackward, HIGH);
+} // END backward
 
-void turnRight(double degrees) {
-  digitalWrite(rForward, LOW);
-  digitalWrite(rBackward, HIGH);
 
-  digitalWrite(lForward, HIGH);
-  digitalWrite(lBackward, LOW);
+// The bot moves by inertia alone
+//
+void coast() {
+  digitalWrite(rightForward, LOW);
+  digitalWrite(rightBackward, LOW);
 
-  double timeDelay = map(degrees, 0, 180, 0, 2000);
-  delay(timeDelay);
+  digitalWrite(leftForward, LOW);
+  digitalWrite(leftBackward, LOW);
+} // END coast
 
-  digitalWrite(lForward, LOW);
-  digitalWrite(rBackward, LOW);
-}
 
-void turnLeft(double degrees) {
-  digitalWrite(rForward, HIGH);
-  digitalWrite(rBackward, LOW);
+// The bot stops moving
+//
+void stop(){
+  digitalWrite(rightForward, HIGH); 
+  digitalWrite(rightBackward, HIGH); 
+  digitalWrite(leftForward, HIGH); 
+  digitalWrite(leftBackward, HIGH); 
+} // END stop
 
-  digitalWrite(lForward, LOW);
-  digitalWrite(lBackward, HIGH);
 
-  double timeDelay = map(degrees, 0, 180, 0, 2000);
-  delay(timeDelay);
+// The bot rotates left
+//
+void left(){
+  digitalWrite(rightForward, HIGH); 
+  digitalWrite(leftBackward, HIGH); 
+  
+  digitalWrite(rightBackward, LOW); 
+  digitalWrite(leftForward, LOW); 
+} // END left
 
-  digitalWrite(lBackward, LOW);
-  digitalWrite(rForward, LOW);
-}
 
-void stopAll() {
-  digitalWrite(rForward, LOW);
-  digitalWrite(rBackward, LOW);
+// The bot rotates right
+//
+void right(){
+  digitalWrite(rightBackward, HIGH); 
+  digitalWrite(leftForward, HIGH); 
 
-  digitalWrite(lForward, LOW);
-  digitalWrite(lBackward, LOW);
-}
+  digitalWrite(rightForward, LOW); 
+  digitalWrite(leftBackward, LOW); 
+} // END left
