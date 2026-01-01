@@ -17,6 +17,7 @@ int lBackward = 5; // ass
 #define IN2 16  // Motor 1 reverse
 #define IN3 5  // Motor 2 reverse
 #define IN4 18  // Motor 2 forward
+#define START 19
 
 ControllerPtr myControllers[BP32_MAX_GAMEPADS];
 
@@ -42,6 +43,8 @@ void onConnectedController(ControllerPtr ctl) {
     }
 }
 
+
+
 void onDisconnectedController(ControllerPtr ctl) {
     bool foundController = false;
 
@@ -59,44 +62,59 @@ void onDisconnectedController(ControllerPtr ctl) {
     }
 }
 
-void processGamepad(ControllerPtr ctl) {
-    int16_t axisX = ctl->axisX();    // Left joystick X-axis
-    int16_t axisY = ctl->axisRY();   // Right joystick Y-axis
+bool started = false;       // keeps track of motor driver state
+bool lastXState = false;    // remembers last X button state
 
-    // First, check for braking (joystick centered)
+void processGamepad(ControllerPtr ctl) {
+    int16_t axisX = ctl->axisX();
+    int16_t axisY = ctl->axisRY();
+
+    // Get current X button state
+    bool currentX = ctl->buttonPressed(0);
+
+    // Toggle on rising edge
+    if (currentX && !lastXState) {
+        started = !started;          // flip state
+        digitalWrite(START, started ? HIGH : LOW);
+    }
+
+    // Remember the current X state for next loop
+    lastXState = currentX;
+
+    // Braking (joystick centered)
     if (abs(axisX) < 50 && abs(axisY) < 50) {
-        // Apply braking: set both inputs of each motor to HIGH to short-circuit the windings
         digitalWrite(IN1, HIGH);
         digitalWrite(IN2, HIGH);
         digitalWrite(IN3, HIGH);
         digitalWrite(IN4, HIGH);
-        return; // No movement if the joystick is in the neutral position
+        return;
     }
 
-    // If not braking, ensure motors are stopped first
+    // Stop motors first
     digitalWrite(IN1, LOW);
     digitalWrite(IN2, LOW);
     digitalWrite(IN3, LOW);
     digitalWrite(IN4, LOW);
 
-    // Handle motor 1 and 2 directions based on joystick Y-axis (for forward/reverse)
+    // Forward/reverse
     if (axisY < -100) {
-        digitalWrite(IN1, HIGH);  // Motor 1 forward
-        digitalWrite(IN3, HIGH);  // Motor 2 reverse
+        digitalWrite(IN1, HIGH);
+        digitalWrite(IN3, HIGH);
     } else if (axisY > 100) {
-        digitalWrite(IN2, HIGH);  // Motor 1 reverse
-        digitalWrite(IN4, HIGH);  // Motor 2 forward
+        digitalWrite(IN2, HIGH);
+        digitalWrite(IN4, HIGH);
     }
 
-    // Handle motor 1 and 2 directions based on joystick X-axis (for turning)
+    // Turning
     if (axisX < -100) {
-        digitalWrite(IN1, HIGH);  // Motor 1 forward
-        digitalWrite(IN4, HIGH);  // Motor 2 reverse
+        digitalWrite(IN1, HIGH);
+        digitalWrite(IN4, HIGH);
     } else if (axisX > 100) {
-        digitalWrite(IN2, HIGH);  // Motor 1 reverse
-        digitalWrite(IN3, HIGH);  // Motor 2 forward
+        digitalWrite(IN2, HIGH);
+        digitalWrite(IN3, HIGH);
     }
 }
+
 
 void processControllers() {
     for (auto ctl : myControllers) {
@@ -124,6 +142,8 @@ void setup() {
     pinMode(IN2, OUTPUT);
     pinMode(IN3, OUTPUT);
     pinMode(IN4, OUTPUT);
+    pinMode(START, OUTPUT);
+    digitalWrite(START, LOW);
 }
 
 void loop() {
